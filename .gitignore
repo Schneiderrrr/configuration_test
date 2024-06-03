@@ -1,0 +1,4 @@
+*/.vs/
+/ToConfigObject/ToConfigObject/obj/
+/ToConfigObject/ToConfigObject/bin/Debug/net8.0/*.*
+/ToConfigObject/ToConfigObject/bin/Release/net8.0/*.*

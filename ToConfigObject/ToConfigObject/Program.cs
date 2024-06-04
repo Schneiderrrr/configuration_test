@@ -54,7 +54,13 @@ namespace ToConfiguration
         public static void Main(string[] args) 
         { 
             var directory = new DirectoryInfo(Environment.CurrentDirectory + @"\objects");
+            if (!directory.Exists)
+                directory.Create();
+
             FileInfo[] files = directory.GetFiles();
+            if (files.Length == 0)
+                Console.WriteLine($"В папке {directory.FullName} нет конфигураций");
+
             foreach (var file in files)
             {
                 Console.WriteLine($"Файл конфигурации: {file.Name}\n");
@@ -69,12 +75,19 @@ namespace ToConfiguration
                         configurator = new ConfiguratorFromCSV();
                         break;
                     default:
-                        Console.WriteLine("Неизвестное расширение файла");
+                        Console.WriteLine("Неизвестное расширение файла\n\n");
                         continue;
                 }
 
-                Configuration configuration = configurator!.GetConfiguration(file.FullName);
-                Console.WriteLine($"Объект класса Configuration: \nName = {configuration.Name};\nDescription = {configuration.Description}");
+                try
+                {
+                    Configuration configuration = configurator!.GetConfiguration(file.FullName); 
+                    Console.WriteLine($"Объект класса Configuration: \nName = {configuration.Name};\nDescription = {configuration.Description}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Не удалось получить конфигурацию.\nОшибка: {ex.Message}");
+                }
                 
                 Console.WriteLine("\n\n");
             }

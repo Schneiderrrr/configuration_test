@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Xml;
 
 namespace ToConfiguration
 {
@@ -17,21 +17,35 @@ namespace ToConfiguration
     // Creator
     public abstract class Configurator
     {
-        public abstract Configuration GetConfiguration();
+        public abstract Configuration GetConfiguration(string source);
     }
     // Concrete creators
     public class ConfiguratorFromXML : Configurator
     {
-        public override Configuration GetConfiguration() 
-        { 
-            return new ConfigurationFromXML();
+        public override Configuration GetConfiguration(string source) 
+        {
+            Configuration config = new ConfigurationFromXML();
+            XmlDocument xmlDoc = new();
+            xmlDoc.Load(source);
+            config.Name = xmlDoc.GetElementsByTagName("name")[0]!.InnerText;
+            config.Description = xmlDoc.GetElementsByTagName("description")[0]!.InnerText;
+
+            return config;
         }
     }
     public class ConfiguratorFromCSV : Configurator
     {
-        public override Configuration GetConfiguration()
+        public override Configuration GetConfiguration(string source)
         {
-            return new ConfigurationFromCSV();
+            Configuration config = new ConfigurationFromCSV();
+            using (StreamReader sr = new(source))
+            {
+                string[] text = sr.ReadToEnd().Split(';');
+                config.Name = text[0];
+                config.Description = text[1];
+            }
+
+            return config;
         }
     }
 
@@ -39,7 +53,31 @@ namespace ToConfiguration
     {
         public static void Main(string[] args) 
         { 
-            
+            var directory = new DirectoryInfo(Environment.CurrentDirectory + @"\objects");
+            FileInfo[] files = directory.GetFiles();
+            foreach (var file in files)
+            {
+                Console.WriteLine($"Файл конфигурации: {file.Name}\n");
+                var fileExt = file.Extension;
+                Configurator? configurator;
+                switch (fileExt)
+                {
+                    case ".xml":
+                        configurator = new ConfiguratorFromXML();
+                        break;
+                    case ".csv":
+                        configurator = new ConfiguratorFromCSV();
+                        break;
+                    default:
+                        Console.WriteLine("Неизвестное расширение файла");
+                        continue;
+                }
+
+                Configuration configuration = configurator!.GetConfiguration(file.FullName);
+                Console.WriteLine($"Объект класса Configuration: \nName = {configuration.Name};\nDescription = {configuration.Description}");
+                
+                Console.WriteLine("\n\n");
+            }
         }
     }
 
